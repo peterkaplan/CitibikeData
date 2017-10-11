@@ -39,11 +39,15 @@ citi$dist <- distHaversine(citi[, c("start.station.longitude", "start.station.la
 #}
 
 #Time conversion
+citi$start <- citi$starttime
 citi <- citi %>% separate(starttime, c("StartDate", "StartTime"), sep = " ")
 citi$StartDate <- as.Date(citi$StartDate, format = '%m/%d/%Y')
 citi <- citi %>% separate(StartTime, c("StartHour", "StartMin"), sep = ":")
 citi$StartHour <- as.numeric(citi$StartHour)
 citi$StartMin <- as.numeric(citi$StartMin)
+
+citi$StartMonth <- as.numeric(citi$Start)
+
 
 citi$DayOfWeek <- weekdays(citi$StartDate)
 
@@ -289,6 +293,49 @@ ggmap(nyc) + geom_point(data=stationByGender, aes(x=start.station.longitude, y=s
 ```
 
 ### 4. Business Issues
+
+Check to see which outgoing
+```{r}
+
+# Get day and month
+
+citi$day <- as.numeric(format(strptime(citi$start, "%m/%d/%Y %H:%M"), '%d'))
+
+citi$month <- as.numeric(format(strptime(citi$start, "%m/%d/%Y %H:%M"), '%m'))
+
+
+# get how many are coming and going on that day
+citi <- citi %>% 
+    group_by(end.station.name, month, day) %>%
+          mutate(coming = n())
+
+citi <- citi %>% 
+    group_by(start.station.name, month, day) %>%
+          mutate(going = n())
+
+# Write the difference in coming and going to diff column
+
+citi <- citi %>% 
+    rowwise() %>%
+          mutate(diff = coming-going)
+
+#sort by month and day
+citi <- arrange(citi,month,day)
+
+
+# Get the data on one station, only unique days
+onestation <- citi %>%
+                filter(start.station.name == "Central Park S & 6 Ave") %>%
+                  distinct(StartDate)
+
+# Add up difference over time
+onestation <- onestation %>% group_by(start.station.name) %>% arrange(StartDate) %>% mutate(TotalDifference = cumsum(diff))
+
+
+# Plot it
+ggplot(onestation, aes(StartDate, TotalDifference, color = start.station.name)) + geom_line() 
+
+```
 
 
 ### 5. Impact of Weather
