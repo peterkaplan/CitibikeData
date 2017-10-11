@@ -10,10 +10,8 @@ output:
 
 ### Setup & Data Cleaning
 
-First, we load all of the necessary libaries and load the dataset.
+First, we load all of the necessary libaries.
 ```{r}
-
-
 library("ggplot2")
 library("dplyr")
 library("tidyr")
@@ -22,13 +20,33 @@ library("geosphere")
 library("ggmap")
 ```
 
-### 1. Understand the data
-
-Lets Read in the data
+Next, we read in the dataset we will be using. We will use the citibike data from Jan 2016 - Sept 2016. 
 ```{r}
 citi <- read.csv("sample_data.csv")
 head(citi)
 ```
+
+Now we need to clean the data. 
+Some of the data we are looking out for is:
+  * Trips that last for extreme times 
+    + Subscribers have 45 minutes to bring the bike back so if the time is much longer than this the rider forgot to bring the bike back.
+      Note: The cutoff time was chosen to be 1.5 Hours. This was chosen because above this it is assumed that the riders are not the usual bike rider (the users don't know how citibike works, forgot to drop off bike, extenuating circumstances) for citibike and are not the rides that we want to study. It was hard to find outliers and make the cutoff based on that because 1.5 * IQR for tripdistance is 33 minutes which is far below the alotted time that a subscriber has to bike around which would be a valid part of the dataset. 
+    + Trips that end very quickly (< 1 minute) and end at the same station that they started means the person started biking and then put it back, this is not representative of a normal citibike ride
+    
+  * When dealing with ages only use subscriber data, customer data has no age information.
+```{r}
+
+citi <- citi %>%
+          filter(tripduration < 5400  & !(tripduration < 90 & start.station.id == end.station.id))
+
+
+```
+
+
+### 1. Understand the data
+
+Lets Read in the data
+
 
 
 ### 2. Identify patterns in the ride history data
