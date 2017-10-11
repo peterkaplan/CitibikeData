@@ -23,7 +23,6 @@ library("ggmap")
 Next, we read in the dataset we will be using. We will use the citibike data from Jan 2016 - Sept 2016. 
 ```{r}
 citi <- read.csv("sample_data.csv")
-head(citi)
 ```
 
 Now we need to clean the data. 
@@ -49,6 +48,49 @@ citi <- citi %>%
 Lets Read in the data
 
 
+##We first provide some overall descriptive statistics on the dataset
+```{r}
+summary(citi)
+
+```
+
+##We continue by visualizing the most basic, but essential, statistics of the dataset
+```{r}
+#Distribution of age
+ggplot(citi) + geom_histogram(aes(birth.year))
+#Citibike users are categorized depending into either "Customer" or "Subscriber" depending on their engagement status. A visualiztion of the distribution is shown below.
+ggplot(citi) + geom_bar(aes(usertype, y = (..count..)/sum(..count..)), fill="blue", colour="darkblue", width=0.2) + ylab("Proportion") +xlab("Usertype")
+#Gender distribution of users
+levels(citi$gender) <- c("UNKNOWN", "MALE", "FEMALE")
+ggplot(citi) + geom_bar(aes(gender, y = (..count..)/sum(..count..)), fill="blue") + ylab("Proportion") +xlab("Gender") + theme_bw()
+#Distribution of duration of trips
+citi$tripdurationinteger <- as.integer(citi$tripduration)
+citi  <- mutate(citi, tripdurationinteger.min = tripdurationinteger/60)
+x.max <- quantile(citi$tripdurationinteger.min, 0.99)
+ggplot(citi) + geom_histogram(aes(tripdurationinteger)) + xlim(c(0, 5000))
+```
+
+##Further, we display statistics we found of particular interest while investigating the dataset
+```{r}
+#Distribution of gender displayed over birth year
+citi %>% filter(gender != "0") %>% ggplot(.)  + geom_density(aes(birth.year,group=gender, fill=gender, colour=gender), adjust=3, alpha=0.1) + xlab("Year of Birth") + ylab("Density")
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+
+
+```
 
 ### 2. Identify patterns in the ride history data
 
