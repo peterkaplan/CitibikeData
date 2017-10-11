@@ -5,30 +5,8 @@ output:
         toc: yes
         toc_float: TRUE
 ---
+# Group Project Citi Bike Exploration and Analysis
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 First, we load all of the necessary libaries and load the dataset.
 ```{r}
@@ -42,11 +20,27 @@ library("geosphere")
 library("ggmap")
 ```
 
-
+### 1. Understand the data
 
 Lets Read in the data
 ```{r}
 citi <- read.csv("sample_data.csv")
 head(citi)
 ```
+
+
+### 2. Identify patterns in the ride history data
+
+
+### 3. Visualize the data on maps
+
+
+### 4. Business Issues
+
+
+### 5. Impact of Weather
+
+
+
+
 
