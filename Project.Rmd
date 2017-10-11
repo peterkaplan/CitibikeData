@@ -1,6 +1,9 @@
 ---
 title: "GroupProject"
-output: html_document
+output: 
+  html_document:
+        toc: yes
+        toc_float: TRUE
 ---
 
 ```{r setup, include=FALSE}
@@ -26,3 +29,24 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+First, we load all of the necessary libaries and load the dataset.
+```{r}
+
+
+library("ggplot2")
+library("dplyr")
+library("tidyr")
+library("lubridate")
+library("geosphere")
+library("ggmap")
+```
+
+
+
+Lets Read in the data
+```{r}
+citi <- read.csv("sample_data.csv")
+head(citi)
+```
+
