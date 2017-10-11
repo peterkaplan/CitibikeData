@@ -18,36 +18,12 @@ library("tidyr")
 library("lubridate")
 library("geosphere")
 library("ggmap")
-library("gridExtra")
 ```
 
 Next, we read in the dataset we will be using. We will use the citibike data from Jan 2016 - Sept 2016. 
 ```{r}
 citi <- read.csv("sample_data.csv")
 head(citi)
-
-
-#Calculate Distance
-citi$dist <- distHaversine(citi[, c("start.station.longitude", "start.station.latitude") ], citi[ ,c ("end.station.longitude", "end.station.latitude") ])
-
-#citi$bearing <-bearingRhumb(citi[, c("start.station.longitude", "start.station.latitude") ], citi[ ,c ("end.station.longitude", "end.station.latitude") ])
-
-#degToCompass <- function(num) {
-#    val <- (num/22.5)+.5
-#    arr <- c("N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW")
-#    return(arr[val % 16])
-#}
-
-#Time conversion
-citi <- citi %>% separate(starttime, c("StartDate", "StartTime"), sep = " ")
-citi$StartDate <- as.Date(citi$StartDate, format = '%m/%d/%Y')
-citi <- citi %>% separate(StartTime, c("StartHour", "StartMin"), sep = ":")
-citi$StartHour <- as.numeric(citi$StartHour)
-citi$StartMin <- as.numeric(citi$StartMin)
-
-citi$DayOfWeek <- weekdays(citi$StartDate)
-
-
 ```
 
 Now we need to clean the data. 
@@ -73,220 +49,12 @@ citi <- citi %>%
 Lets Read in the data
 
 
-##We first provide some overall descriptive statistics on the dataset
-```{r}
-summary(citi)
-
-```
-
-##We continue by visualizing the most basic, but essential, statistics of the dataset
-```{r}
-#Distribution of age
-ggplot(citi) + geom_histogram(aes(birth.year))
-#Citibike users are categorized depending into either "Customer" or "Subscriber" depending on their engagement status. A visualiztion of the distribution is shown below.
-ggplot(citi) + geom_bar(aes(usertype, y = (..count..)/sum(..count..)), fill="blue", colour="darkblue", width=0.2) + ylab("Proportion") +xlab("Usertype")
-#Gender distribution of users
-levels(citi$gender) <- c("UNKNOWN", "MALE", "FEMALE")
-ggplot(citi) + geom_bar(aes(gender, y = (..count..)/sum(..count..)), fill="blue") + ylab("Proportion") +xlab("Gender") + theme_bw()
-#Distribution of duration of trips
-citi$tripdurationinteger <- as.integer(citi$tripduration)
-citi  <- mutate(citi, tripdurationinteger.min = tripdurationinteger/60)
-x.max <- quantile(citi$tripdurationinteger.min, 0.99)
-ggplot(citi) + geom_histogram(aes(tripdurationinteger)) + xlim(c(0, 5000))
-```
-
-##Further, we display statistics we found of particular interest while investigating the dataset
-```{r}
-#Distribution of gender displayed over birth year
-citi %>% filter(gender != "0") %>% ggplot(.)  + geom_density(aes(birth.year,group=gender, fill=gender, colour=gender), adjust=3, alpha=0.1) + xlab("Year of Birth") + ylab("Density")
-
-```
-
-```{r}
-
-
-```
-
-```{r}
-
-
-```
-
-```{r}
-
-
-```
 
 ### 2. Identify patterns in the ride history data
 
 
-####Which stations are most popular (number of rides per minute) at different times of the day??
-
-```{r}
-stations <- citi %>%
-    group_by(start.station.name , StartHour, start.station.longitude, start.station.latitude) %>%
-    summarise(numRides = n() ) %>%
-    mutate(ridesPerMinuteInHour = numRides / 60) %>%
-    arrange(desc(ridesPerMinuteInHour))
-top <- stations[0: 1000,]
-nyc_base <- ggmap::get_map("New York City", zoom = 13)
-ggmap(nyc_base) + geom_point(data=top, aes(x=start.station.longitude, y=start.station.latitude, colour=ridesPerMinuteInHour), size=4, alpha=0.6)
-
-
-
-```
-Here we plot the top 100 locations with the busiest rides per hour throughout the day. We only see about 12 locations, which means that some of these appears multiple times. All of these are in the southern point of manhattan.
-
-###Question 4.
-What are the most common routes? From above, we saw that the weekdays are most busy and that it appears that this comes from the rush hour traffic. Lets first do some analysis on how many different routes there are.
-```{r}
-#
-
-routes <- citi %>%
-    group_by(start.station.name, end.station.name, start.station.latitude, start.station.longitude, end.station.latitude, end.station.longitude,) %>%
-    summarise(numberOfTrips = n(), lengthTrip = mean(dist), avg_duration = mean(tripduration))
-
-nrow(routes)
-#There are 36,668 routes
-```
-
-How many routes return to themselves?
-```{r}
-
-#filter(routes, start.station.name == end.station.name) %>%
-#  arrange(desc(numberOfTrips))
-
-
-```
-Biking around central park seems like the most popular loop.
-Biking around Reade St is towards the southern tip of Manhattan
-
-What is the most frequented Route?
-```{r}
-routes <- arrange(routes, desc(numberOfTrips))
-topRoutes <- routes[0:500, ]
-head(topRoutes)
-```
-
-
-
-
-
-The top station is from Grand Central Station, which makes sense since most commuters will probably be going from work
-Can we map the top 100 most frequented loop?
-```{r}
-
-#nyc_base <- ggmap::get_map("New York City", zoom = 14)
-
-#ggplot(data=topRoutes, aes(x=start.station.longitude, y=start.station.latitude, fill=numberOfTrips)) + geom_polygon()
-
-
-ggmap(nyc_base) + geom_point(data=topRoutes, aes(x=start.station.longitude, y=start.station.latitude, colour=numberOfTrips), size=3, alpha=0.5) 
-
-
-
-
-
-```
-Using the zillow dataset of all the neighborhoods in NYC, we can load them and see there are 19.
-
-```{r}
-library(rgdal, quietly = TRUE, warn.conflicts = FALSE)
-
-ny.map <- readOGR("neighborhoods-in-new-york/ZillowNeighborhoods-NY.shp", layer = "ZillowNeighborhoods-NY")
-neighborhoods <- ny.map[ny.map$City == "New York", ]
-neighborhood_names <- levels(neighborhoods$Name)
-print(head(neighborhood_names, n = 12))
-
-
-
-```
-
-
-
-```{r}
-
-find_neighborhoods <- function(df, long_feature, lat_feature, neighborhood_feature) {
-  dat <- data.frame(long = df[long_feature][[1]], lat = df[lat_feature][[1]])
-  coordinates(dat) <- ~ long + lat
-  proj4string(dat) <- proj4string(neighborhoods)
-  df[neighborhood_feature] <- over(dat, neighborhoods)$Name
-  
-  levels(df[[neighborhood_feature]]) <- c(levels(df[[neighborhood_feature]]), "Unknown")
-  df[[neighborhood_feature]][is.na(df[[neighborhood_feature]])] <- "Unknown"
-  
-  return(df)
-}
-
-citi = find_neighborhoods(citi, "start.station.longitude", "start.station.latitude", "pickup_neighborhood")
-citi = find_neighborhoods(citi, "end.station.longitude", "end.station.longitude", "dropoff_neighborhood")
-
-#citi = find_neighborhoods(citi, "pickup_longitude", "pickup_latitude", "pickup_neighborhood")
-#citi = find_neighborhoods(citi, "dropoff_longitude", "dropoff_latitude", "dropoff_neighborhood")
-
-
-```
-Now that we have all of the neighborhooad information, lets see the most popular pickup neighborhoods. It appears that the most popular neighborhoods are in the lower part of manhattan. These must be more bikeable areas.
-
-
-```{r}
-
-sort(table(citi$pickup_neighborhood), decreasing = TRUE)[1:16]
-
-
-```
-
-
-
-
-
 ### 3. Visualize the data on maps
-```{r}
-nyc_base <- ggmap::get_map("New York City", zoom = 1)
 
-
-
-stations <- citi %>%
-    group_by(start.station.name , StartHour, start.station.longitude, start.station.latitude) %>%
-    summarise(numRides = n() ) %>%
-    arrange(desc(numRides))
-top <- stations[0: 2000,]
-#top
-
-nyc     <- get_map("Herald Square, new york", zoom=12)
-nyc.map <- ggmap(nyc)
-startStation <- nyc.map + stat_density2d(aes(x= start.station.longitude , y= start.station.latitude, fill = ..level..), alpha=0.6, 
-size = 2, bins = 8, data=citi, geom="polygon") + scale_fill_gradient(low="pink", high="purple4") 
-
-
-#ggmap(nyc_base) + geom_point(data=top, aes(x=start.station.longitude, y=start.station.latitude, colour=numRides), size=4, alpha=0.3)
-nyc.map + stat_density2d(aes(x= end.station.longitude , y= end.station.latitude, fill = ..level..), alpha=0.6, 
-size = 2, bins = 8, data=citi, geom="polygon") + scale_fill_gradient(low="pink", high="purple4") 
-
- 
-```
-
-```{r}
-trip_duration_by_station <- citi %>%
-    group_by(start.station.name, start.station.longitude, start.station.latitude) %>%
-    summarise(median_trip = median(tripduration))
-  
-ggmap(nyc) + geom_point(data=trip_duration_by_station, aes(x=start.station.longitude, y=start.station.latitude, colour=median_trip), size=3, alpha=.8) + scale_color_gradient2(low = ("red"), mid = "white",
-  high = ("blue"), midpoint = 500)
-  
-```
-
-
-Lets compare the different habits of female vs male ridership throughout the city.
-```{r}
-stationByGender <- citi %>%
-    filter(gender != "Unspecified") %>%
-    group_by(start.station.name, start.station.latitude, start.station.longitude) %>%
-    summarise(pct.female = mean(gender == "Female"))
-
-ggmap(nyc) + geom_point(data=stationByGender, aes(x=start.station.longitude, y=start.station.latitude, color=pct.female)) + geom_point(size=6, alpha=1)+ scale_color_gradient2()
-
-```
 
 ### 4. Business Issues
 
