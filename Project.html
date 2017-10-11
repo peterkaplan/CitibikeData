@@ -220,9 +220,12 @@ div.tocify {
 
 <div id="group-project-citi-bike-exploration-and-analysis" class="section level1">
 <h1>Group Project Citi Bike Exploration and Analysis</h1>
-<p>First, we load all of the necessary libaries and load the dataset.</p>
+<div id="setup-data-cleaning" class="section level3">
+<h3>Setup &amp; Data Cleaning</h3>
+<p>First, we load all of the necessary libaries.</p>
 <pre class="r"><code>library(&quot;ggplot2&quot;)
 library(&quot;dplyr&quot;)</code></pre>
+<pre><code>## Warning: package 'dplyr' was built under R version 3.4.2</code></pre>
 <pre><code>## 
 ## Attaching package: 'dplyr'</code></pre>
 <pre><code>## The following objects are masked from 'package:stats':
@@ -241,9 +244,7 @@ library(&quot;lubridate&quot;)</code></pre>
 <pre class="r"><code>library(&quot;geosphere&quot;)</code></pre>
 <pre><code>## Loading required package: sp</code></pre>
 <pre class="r"><code>library(&quot;ggmap&quot;)</code></pre>
-<div id="section" class="section level3">
-<h3>1.</h3>
-<p>Lets Read in the data</p>
+<p>Next, we read in the dataset we will be using. We will use the citibike data from Jan 2016 - Sept 2016.</p>
 <pre class="r"><code>citi &lt;- read.csv(&quot;sample_data.csv&quot;)
 head(citi)</code></pre>
 <pre><code>##          X tripduration          starttime           stoptime
@@ -281,18 +282,33 @@ head(citi)</code></pre>
 ## 4      1
 ## 5      2
 ## 6      1</code></pre>
+<p>Now we need to clean the data. Some of the data we are looking out for is:</p>
+<ul>
+<li><p>Trips that last for extreme times</p>
+<ul>
+<li>Subscribers have 45 minutes to bring the bike back so if the time is much longer than this the rider forgot to bring the bike back. Note: The cutoff time was chosen to be 1.5 Hours. This was chosen because above this it is assumed that the riders are not the usual bike rider (the users don’t know how citibike works, forgot to drop off bike, extenuating circumstances) for citibike and are not the rides that we want to study. It was hard to find outliers and make the cutoff based on that because 1.5 x IQR for tripdistance is 33 minutes which is far below the alotted time that a subscriber has to bike around which would be a valid part of the dataset.</li>
+<li>Trips that end very quickly (&lt; 1 minute) and end at the same station that they started means the person started biking and then put it back, this is not representative of a normal citibike ride</li>
+</ul></li>
+<li><p>When dealing with ages only use subscriber data, customer data has no age information. This situation needs to be handled only when using gender as a parameter.</p></li>
+</ul>
+<pre class="r"><code>citi &lt;- citi %&gt;%
+          filter(tripduration &lt; 5400  &amp; !(tripduration &lt; 90 &amp; start.station.id == end.station.id))</code></pre>
 </div>
-<div id="section-1" class="section level3">
-<h3>2.</h3>
+<div id="understand-the-data" class="section level3">
+<h3>1. Understand the data</h3>
+<p>Lets Read in the data</p>
+</div>
+<div id="identify-patterns-in-the-ride-history-data" class="section level3">
+<h3>2. Identify patterns in the ride history data</h3>
 </div>
 <div id="visualize-the-data-on-maps" class="section level3">
 <h3>3. Visualize the data on maps</h3>
 </div>
-<div id="section-2" class="section level3">
-<h3>4.</h3>
+<div id="business-issues" class="section level3">
+<h3>4. Business Issues</h3>
 </div>
-<div id="section-3" class="section level3">
-<h3>5.</h3>
+<div id="impact-of-weather" class="section level3">
+<h3>5. Impact of Weather</h3>
 </div>
 </div>
 
