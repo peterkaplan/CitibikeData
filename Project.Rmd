@@ -8,6 +8,8 @@ output:
 # Group Project Citi Bike Exploration and Analysis
 
 
+### Setup & Data Cleaning
+
 First, we load all of the necessary libaries and load the dataset.
 ```{r}
 
